@@ -45,6 +45,28 @@ export async function DELETE(
     return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
   }
 
-  await prisma.user.delete({ where: { id } });
+  // Find linked trader (if any) to cascade-delete all their data first
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { trader: { select: { id: true } } },
+  });
+  const traderId = user?.trader?.id;
+
+  await prisma.$transaction([
+    // Trader's children
+    ...(traderId ? [
+      prisma.closedTrade.deleteMany({ where: { traderId } }),
+      prisma.connectedAccount.deleteMany({ where: { traderId } }),
+      prisma.follow.deleteMany({ where: { traderId } }),
+      prisma.traderStats.deleteMany({ where: { traderId } }),
+      prisma.verificationRequest.deleteMany({ where: { traderId } }),
+      prisma.trader.delete({ where: { id: traderId } }),
+    ] : []),
+    // User's own follows (as a follower of other traders)
+    prisma.follow.deleteMany({ where: { userId: id } }),
+    // Delete the user
+    prisma.user.delete({ where: { id } }),
+  ]);
+
   return NextResponse.json({ success: true });
 }

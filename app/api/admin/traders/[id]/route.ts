@@ -35,6 +35,21 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  await prisma.trader.delete({ where: { id } });
+
+  await prisma.$transaction([
+    // 1. Trades reference both ConnectedAccount and Trader — delete first
+    prisma.closedTrade.deleteMany({ where: { traderId: id } }),
+    // 2. ConnectedAccounts reference Trader
+    prisma.connectedAccount.deleteMany({ where: { traderId: id } }),
+    // 3. Follows reference Trader
+    prisma.follow.deleteMany({ where: { traderId: id } }),
+    // 4. TraderStats references Trader
+    prisma.traderStats.deleteMany({ where: { traderId: id } }),
+    // 5. VerificationRequest references Trader
+    prisma.verificationRequest.deleteMany({ where: { traderId: id } }),
+    // 6. Finally delete the Trader itself
+    prisma.trader.delete({ where: { id } }),
+  ]);
+
   return NextResponse.json({ success: true });
 }
