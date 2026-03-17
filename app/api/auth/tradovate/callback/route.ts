@@ -9,6 +9,7 @@ import {
   getContracts,
   mapFillPairsToTrades,
 } from "@/lib/integrations/tradovate";
+import { detectAccountType } from "@/lib/accountType";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,7 @@ export async function GET(req: NextRequest) {
         accountIdentifier: identifier,
         credentialsEncrypted: JSON.stringify({ accessToken, expirationTime, userId }),
         status: "active",
+        accountType: detectAccountType(account.name),
       },
     });
   }

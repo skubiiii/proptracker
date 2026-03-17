@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { recalculateTraderStats } from "@/lib/stats";
 import { authenticate, getAccounts, getTrades, mapFillsToTrades } from "@/lib/integrations/projectx";
+import { detectAccountType } from "@/lib/accountType";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
         accountIdentifier: identifier,
         credentialsEncrypted: JSON.stringify({ username, apiKey }),
         status: "active",
+        accountType: detectAccountType(pxAccount.name),
       },
       include: { propFirm: true },
     });

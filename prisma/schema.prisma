@@ -65,6 +65,7 @@ model ConnectedAccount {
   accountIdentifier    String    @map("account_identifier")
   credentialsEncrypted String?   @map("credentials_encrypted")
   status               String    @default("active")
+  accountType          String    @default("unknown") @map("account_type")
   connectedAt          DateTime  @default(now()) @map("connected_at")
   lastSyncedAt         DateTime? @map("last_synced_at")
 

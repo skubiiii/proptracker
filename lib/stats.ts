@@ -1,8 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
 export async function recalculateTraderStats(traderId: string) {
+  // Only count trades from funded accounts (fall back to all if none tagged yet)
+  const fundedAccounts = await prisma.connectedAccount.findMany({
+    where: { traderId, accountType: "funded" },
+    select: { id: true },
+  });
+
+  const whereClause =
+    fundedAccounts.length > 0
+      ? { traderId, connectedAccountId: { in: fundedAccounts.map((a) => a.id) } }
+      : { traderId };
+
   const trades = await prisma.closedTrade.findMany({
-    where: { traderId },
+    where: whereClause,
     select: { pnl: true, entryTime: true, exitTime: true },
     orderBy: { exitTime: "asc" },
   });

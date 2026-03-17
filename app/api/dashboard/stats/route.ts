@@ -14,15 +14,17 @@ export async function GET() {
   const traderId = session.user.traderId;
 
   const [accounts, allTrades, stats] = await Promise.all([
-    prisma.connectedAccount.findMany({ where: { traderId }, include: { propFirm: true } }),
+    prisma.connectedAccount.findMany({
+      where: { traderId },
+      include: { propFirm: true },
+      orderBy: { connectedAt: "asc" },
+    }),
     prisma.closedTrade.findMany({
       where: { traderId },
       select: { pnl: true, connectedAccountId: true },
     }),
     prisma.traderStats.findUnique({ where: { traderId } }),
   ]);
-
-  const totalPnl = allTrades.reduce((s, t) => s + t.pnl, 0);
 
   // Per-account aggregates
   const accStats: Record<string, { pnl: number; wins: number; total: number }> = {};
@@ -34,7 +36,7 @@ export async function GET() {
     accStats[t.connectedAccountId] = a;
   }
 
-  // Check for expired Tradovate tokens
+  // Build account breakdown with accountType + token expiry check
   const now = Date.now();
   const accountBreakdown = accounts.map((acc) => {
     const a = accStats[acc.id] ?? { pnl: 0, wins: 0, total: 0 };
@@ -53,6 +55,7 @@ export async function GET() {
       propFirmSlug: acc.propFirm.slug,
       platform: acc.platform,
       accountIdentifier: acc.accountIdentifier,
+      accountType: acc.accountType, // "funded" | "evaluation" | "unknown"
       status: acc.status,
       connectedAt: acc.connectedAt,
       lastSyncedAt: acc.lastSyncedAt,
@@ -63,8 +66,21 @@ export async function GET() {
     };
   });
 
+  // Funded-only P&L (the number that matters)
+  const fundedAccountIds = new Set(
+    accounts.filter((a) => a.accountType === "funded").map((a) => a.id)
+  );
+  const fundedPnl = allTrades
+    .filter((t) => fundedAccountIds.has(t.connectedAccountId))
+    .reduce((s, t) => s + t.pnl, 0);
+
+  // Fall back to all trades if no funded accounts tagged yet
+  const hasFunded = fundedAccountIds.size > 0;
+
   return NextResponse.json({
-    totalPnl,
+    totalPnl: hasFunded ? fundedPnl : allTrades.reduce((s, t) => s + t.pnl, 0),
+    fundedPnl,
+    hasFunded,
     totalTrades: stats?.totalTrades ?? allTrades.length,
     winRate: stats?.winRate ?? 0,
     avgRr: stats?.avgRr ?? 0,

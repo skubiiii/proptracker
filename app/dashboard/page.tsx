@@ -12,6 +12,7 @@ interface Account {
   propFirmSlug: string;
   platform: string;
   accountIdentifier: string;
+  accountType: "funded" | "evaluation" | "unknown";
   status: string;
   connectedAt: string;
   lastSyncedAt: string | null;
@@ -23,6 +24,8 @@ interface Account {
 
 interface Stats {
   totalPnl: number;
+  fundedPnl: number;
+  hasFunded: boolean;
   totalTrades: number;
   winRate: number;
   avgRr: number;
@@ -73,6 +76,7 @@ export default function DashboardPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState<TradeDetail | null>(null);
+  const [togglingType, setTogglingType] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState<Partial<ProfileData>>({});
@@ -112,6 +116,18 @@ export default function DashboardPage() {
     await fetch("/api/sync", { method: "POST" });
     await fetchData();
     setSyncing(false);
+  }
+
+  async function handleToggleType(accId: string, current: string) {
+    const next = current === "funded" ? "evaluation" : current === "evaluation" ? "unknown" : "funded";
+    setTogglingType(accId);
+    await fetch(`/api/dashboard/accounts/${accId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accountType: next }),
+    });
+    await fetchData();
+    setTogglingType(null);
   }
 
   async function handleProfileSave() {
@@ -200,7 +216,7 @@ export default function DashboardPage() {
       {!noAccounts && (
         <div className="card p-6 mb-6">
           <p className="text-xs text-[var(--muted)] uppercase tracking-widest mb-1 text-center">
-            Cumulative P&L — All Accounts
+            {stats?.hasFunded ? "Funded Accounts P&L" : "Cumulative P&L — All Accounts"}
           </p>
           {loading ? (
             <div className="h-12 w-48 bg-white/[0.04] rounded-lg animate-pulse mx-auto mb-4" />
@@ -261,37 +277,52 @@ export default function DashboardPage() {
           </div>
         ) : !noAccounts ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {stats?.accounts.map((acc) => (
-              <div
-                key={acc.id}
-                className={`card p-5 ${acc.tokenExpired ? "border border-yellow-400/30" : ""}`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{acc.propFirmName}</p>
-                    <p className="text-[10px] text-[var(--muted)] uppercase mt-0.5">{acc.platform}</p>
+            {stats?.accounts.map((acc) => {
+              const typeCfg = {
+                funded:     { label: "Funded",     cls: "bg-green-400/10 text-green-400 border-green-400/20" },
+                evaluation: { label: "Evaluation", cls: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20" },
+                unknown:    { label: "Unknown",    cls: "bg-white/[0.06] text-[var(--muted)] border-white/[0.08]" },
+              }[acc.accountType] ?? { label: "Unknown", cls: "bg-white/[0.06] text-[var(--muted)] border-white/[0.08]" };
+
+              return (
+                <div
+                  key={acc.id}
+                  className={`card p-5 ${acc.tokenExpired ? "border-yellow-400/30" : acc.accountType === "funded" ? "border-green-400/10" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{acc.propFirmName}</p>
+                      <p className="text-[10px] text-[var(--muted)] uppercase mt-0.5">{acc.platform}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {acc.tokenExpired && (
+                        <span className="text-[10px] bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-2 py-0.5 rounded-full font-medium">
+                          token expired
+                        </span>
+                      )}
+                      {/* Account type badge — click to cycle */}
+                      <button
+                        onClick={() => handleToggleType(acc.id, acc.accountType)}
+                        disabled={togglingType === acc.id}
+                        title="Click to change account type"
+                        className={`text-[10px] border px-2 py-0.5 rounded-full font-medium transition-opacity hover:opacity-70 disabled:opacity-40 cursor-pointer ${typeCfg.cls}`}
+                      >
+                        {togglingType === acc.id ? "..." : typeCfg.label}
+                      </button>
+                    </div>
                   </div>
-                  {acc.tokenExpired ? (
-                    <span className="text-[10px] bg-yellow-400/10 text-yellow-400 px-2 py-0.5 rounded font-medium">
-                      expired
-                    </span>
-                  ) : (
-                    <span className="text-[10px] bg-green-400/10 text-green-400 px-2 py-0.5 rounded font-medium">
-                      {acc.status}
-                    </span>
-                  )}
+                  <p className="text-xs text-[var(--muted)] mb-3 truncate">{acc.accountIdentifier}</p>
+                  <p className={`text-xl font-bold tabular-nums mb-2 ${acc.pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {fmt(acc.pnl)}
+                  </p>
+                  <div className="flex items-center gap-3 text-[11px] text-[var(--muted)]">
+                    <span>{acc.tradeCount} trades</span>
+                    <span className="text-white/20">·</span>
+                    <span>{fmtWinRate(acc.winRate)} WR</span>
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--muted)] mb-3 truncate">{acc.accountIdentifier}</p>
-                <p className={`text-xl font-bold tabular-nums mb-2 ${acc.pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
-                  {fmt(acc.pnl)}
-                </p>
-                <div className="flex items-center gap-3 text-[11px] text-[var(--muted)]">
-                  <span>{acc.tradeCount} trades</span>
-                  <span className="text-white/20">·</span>
-                  <span>{fmtWinRate(acc.winRate)} WR</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : null}
       </div>
