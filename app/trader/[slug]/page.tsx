@@ -53,8 +53,10 @@ export default async function TraderProfilePage({
       {/* Profile header */}
       <div className="card p-6 mb-6 flex items-start gap-6">
         {/* Avatar */}
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-          {trader.displayName.charAt(0).toUpperCase()}
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 overflow-hidden">
+          {trader.avatarUrl
+            ? <img src={trader.avatarUrl} alt={trader.displayName} className="w-full h-full object-cover" />
+            : trader.displayName.charAt(0).toUpperCase()}
         </div>
 
         {/* Info */}

@@ -32,6 +32,7 @@ export const authOptions: NextAuthOptions = {
           name: user.username,
           traderId: user.trader?.id ?? null,
           traderSlug: user.trader?.slug ?? null,
+          role: user.role,
         };
       },
     }),
@@ -41,6 +42,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.traderId = (user as any).traderId;
         token.traderSlug = (user as any).traderSlug;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -49,6 +51,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.sub;
         (session.user as any).traderId = token.traderId;
         (session.user as any).traderSlug = token.traderSlug;
+        (session.user as any).role = token.role ?? "user";
       }
       return session;
     },

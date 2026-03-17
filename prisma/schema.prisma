@@ -13,6 +13,7 @@ model User {
   username     String   @unique
   passwordHash String   @map("password_hash")
   avatarUrl    String?  @map("avatar_url")
+  role         String   @default("user")
   createdAt    DateTime @default(now()) @map("created_at")
 
   follows Follow[]
@@ -35,13 +36,28 @@ model Trader {
   isVerified  Boolean  @default(false) @map("is_verified")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  connectedAccounts ConnectedAccount[]
-  closedTrades      ClosedTrade[]
-  follows           Follow[]
-  stats             TraderStats?
-  user              User?              @relation(fields: [userId], references: [id])
+  connectedAccounts    ConnectedAccount[]
+  closedTrades         ClosedTrade[]
+  follows              Follow[]
+  stats                TraderStats?
+  user                 User?                @relation(fields: [userId], references: [id])
+  verificationRequest  VerificationRequest?
 
   @@map("traders")
+}
+
+model VerificationRequest {
+  id         String   @id @default(cuid())
+  traderId   String   @unique @map("trader_id")
+  status     String   @default("pending")
+  message    String?
+  adminNote  String?  @map("admin_note")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  trader Trader @relation(fields: [traderId], references: [id])
+
+  @@map("verification_requests")
 }
 
 model PropFirm {

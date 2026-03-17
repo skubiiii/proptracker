@@ -9,6 +9,7 @@ declare module "next-auth" {
       name: string;
       traderId: string | null;
       traderSlug: string | null;
+      role: string;
     };
   }
 }
@@ -17,5 +18,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     traderId?: string | null;
     traderSlug?: string | null;
+    role?: string;
   }
 }

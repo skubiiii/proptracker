@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { ConnectAccountModal } from "@/components/ConnectAccountModal";
 import { EquityCurve } from "@/components/EquityCurve";
 import { TradeDetailModal, type TradeDetail } from "@/components/TradeDetailModal";
+import { VerificationRequestButton } from "@/components/VerificationRequestButton";
 
 interface Account {
   id: string;
@@ -46,6 +47,13 @@ interface ProfileData {
   tiktokUrl: string | null;
   telegramUrl: string | null;
   slug: string;
+  isVerified: boolean;
+  avatarUrl: string | null;
+}
+
+interface VerifyStatus {
+  isVerified: boolean;
+  request: { status: string } | null;
 }
 
 function fmt(n: number) {
@@ -72,6 +80,7 @@ export default function DashboardPage() {
   const [trades, setTrades] = useState<TradeDetail[]>([]);
   const [curvePoints, setCurvePoints] = useState<CurvePoint[]>([]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [verifyStatus, setVerifyStatus] = useState<VerifyStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -81,14 +90,19 @@ export default function DashboardPage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState<Partial<ProfileData>>({});
   const [expiredBannerDismissed, setExpiredBannerDismissed] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [statsRes, tradesRes, curveRes, profileRes] = await Promise.all([
+    const [statsRes, tradesRes, curveRes, profileRes, verifyRes] = await Promise.all([
       fetch("/api/dashboard/stats"),
       fetch("/api/dashboard/trades?limit=20"),
       fetch("/api/dashboard/equity-curve"),
       fetch("/api/dashboard/profile"),
+      fetch("/api/dashboard/verify"),
     ]);
     if (statsRes.ok) setStats(await statsRes.json());
     if (tradesRes.ok) {
@@ -104,8 +118,49 @@ export default function DashboardPage() {
       setProfile(p);
       setProfileForm(p);
     }
+    if (verifyRes.ok) {
+      setVerifyStatus(await verifyRes.json());
+    }
     setLoading(false);
   }, []);
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarError(null);
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("File exceeds 2MB limit.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
+      setAvatarError("Invalid file type.");
+      return;
+    }
+
+    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarUploading(true);
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: form });
+    if (res.ok) {
+      const { avatarUrl } = await res.json();
+      setProfile((prev) => prev ? { ...prev, avatarUrl } : prev);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      setAvatarError(err.error ?? "Upload failed.");
+      setAvatarPreview(null);
+    }
+    setAvatarUploading(false);
+  }
+
+  async function handleAvatarRemove() {
+    setAvatarUploading(true);
+    await fetch("/api/dashboard/avatar", { method: "DELETE" });
+    setAvatarPreview(null);
+    setProfile((prev) => prev ? { ...prev, avatarUrl: null } : prev);
+    setAvatarUploading(false);
+  }
 
   useEffect(() => {
     fetchData();
@@ -178,6 +233,12 @@ export default function DashboardPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2 mt-1">
+          {verifyStatus && (
+            <VerificationRequestButton
+              initialIsVerified={verifyStatus.isVerified}
+              initialStatus={verifyStatus.request?.status ?? null}
+            />
+          )}
           <button
             onClick={() => setProfileOpen(true)}
             className="btn-ghost text-xs !py-1.5 !px-3"
@@ -392,6 +453,44 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-white">Edit Profile</h2>
               <button onClick={() => setProfileOpen(false)} className="text-[var(--muted)] hover:text-white text-xl leading-none">×</button>
+            </div>
+
+            {/* Avatar upload */}
+            <div className="mb-4">
+              <label className="block text-xs text-[var(--muted)] mb-2">Avatar</label>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center text-white text-xl font-bold">
+                  {(avatarPreview ?? profile?.avatarUrl)
+                    ? <img src={avatarPreview ?? profile?.avatarUrl ?? ""} alt="" className="w-full h-full object-cover" />
+                    : (profile?.displayName?.charAt(0).toUpperCase() ?? "?")}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="btn-ghost text-xs !py-1 !px-3 disabled:opacity-50"
+                  >
+                    {avatarUploading ? "Uploading..." : "Upload Photo"}
+                  </button>
+                  {(profile?.avatarUrl || avatarPreview) && (
+                    <button
+                      onClick={handleAvatarRemove}
+                      disabled={avatarUploading}
+                      className="text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  {avatarError && <p className="text-xs text-red-400">{avatarError}</p>}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-3">

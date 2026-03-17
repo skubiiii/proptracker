@@ -13,7 +13,7 @@ export async function GET() {
 
   const trader = await prisma.trader.findUnique({
     where: { id: session.user.traderId },
-    select: { displayName: true, bio: true, twitterUrl: true, youtubeUrl: true, tiktokUrl: true, telegramUrl: true, slug: true },
+    select: { displayName: true, bio: true, twitterUrl: true, youtubeUrl: true, tiktokUrl: true, telegramUrl: true, slug: true, isVerified: true, avatarUrl: true },
   });
 
   return NextResponse.json(trader);
