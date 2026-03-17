@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalculateTraderStats } from "@/lib/stats";
 import {
   exchangeCodeForToken,
   getAccounts,
@@ -124,6 +125,8 @@ export async function GET(req: NextRequest) {
       where: { id: connectedAccount.id },
       data: { lastSyncedAt: new Date() },
     });
+
+    await recalculateTraderStats(traderId).catch(() => {});
   } catch (err) {
     console.error("Tradovate initial sync failed:", err);
     // Non-fatal — account is connected, trades can be synced later

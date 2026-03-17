@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recalculateTraderStats } from "@/lib/stats";
 import { authenticate, getTrades, mapFillsToTrades } from "@/lib/integrations/projectx";
 import {
   renewToken,
@@ -99,6 +100,8 @@ export async function POST() {
       results.push({ accountId: account.id, platform: account.platform, error: err.message, status: "error" });
     }
   }
+
+  await recalculateTraderStats(traderId).catch(() => {});
 
   return NextResponse.json({ synced: results.length, results });
 }

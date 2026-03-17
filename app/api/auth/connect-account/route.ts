@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recalculateTraderStats } from "@/lib/stats";
 import { authenticate, getAccounts, getTrades, mapFillsToTrades } from "@/lib/integrations/projectx";
 
 export async function POST(req: NextRequest) {
@@ -101,6 +102,8 @@ export async function POST(req: NextRequest) {
         where: { id: connected.id },
         data: { lastSyncedAt: new Date() },
       });
+
+      await recalculateTraderStats(session.user.traderId!).catch(() => {});
     } catch (syncErr) {
       // Sync failure is non-fatal — account is still connected
       console.error("Initial sync failed:", syncErr);

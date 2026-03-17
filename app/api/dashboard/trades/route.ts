@@ -18,7 +18,18 @@ export async function GET(req: NextRequest) {
     where: { traderId: session.user.traderId },
     orderBy: { exitTime: "desc" },
     take: limit,
-    include: {
+    select: {
+      id: true,
+      instrument: true,
+      direction: true,
+      entryPrice: true,
+      exitPrice: true,
+      quantity: true,
+      pnl: true,
+      pnlPercent: true,
+      entryTime: true,
+      exitTime: true,
+      closeReason: true,
       connectedAccount: { include: { propFirm: true } },
     },
   });
