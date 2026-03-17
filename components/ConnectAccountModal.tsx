@@ -189,44 +189,71 @@ export function ConnectAccountModal({ open, onClose, onSuccess }: Props) {
                 <span className="text-xs text-white">{selectedFirm.name}</span>
               </div>
 
-              <div className="flex flex-col gap-3 mb-5">
-                {fields.map((field) => (
-                  <div key={field.key}>
-                    <label className="block text-xs text-[var(--muted)] mb-1.5">{field.label}</label>
-                    <input
-                      type={field.type ?? "text"}
-                      value={credentials[field.key] ?? ""}
-                      onChange={(e) => setCredentials((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                      placeholder={field.type === "password" ? "••••••••" : ""}
-                      className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                    />
+              {/* Tradovate — OAuth redirect, no credential form */}
+              {selectedFirm.infrastructure === "tradovate" ? (
+                <div className="py-4">
+                  <div className="w-14 h-14 rounded-xl bg-blue-400/10 border border-blue-400/20 flex items-center justify-center mx-auto mb-5 text-2xl">
+                    🔗
                   </div>
-                ))}
-              </div>
-
-              {selectedFirm.infrastructure === "projectx" && (
-                <div className="flex items-start gap-2 bg-blue-400/5 border border-blue-400/20 rounded-lg p-3 mb-3 text-xs text-blue-400/80">
-                  <span className="mt-px">ℹ️</span>
-                  <span>
-                    Get your API key from <strong>TopstepX → Settings → API</strong>. A ProjectX API subscription is required ($29/mo).
-                  </span>
+                  <p className="text-white font-medium text-center mb-2">Connect via Tradovate</p>
+                  <p className="text-xs text-[var(--muted)] text-center mb-6">
+                    You'll be redirected to Tradovate to log in and authorize access. No credentials are stored by PropTracker.
+                  </p>
+                  <div className="flex items-start gap-2 bg-blue-400/5 border border-blue-400/20 rounded-lg p-3 mb-5 text-xs text-blue-400/80">
+                    <span className="mt-px">ℹ️</span>
+                    <span>
+                      Requires a <strong>Tradovate API subscription</strong>. Enable it under Tradovate → Settings → API Access.
+                    </span>
+                  </div>
+                  <a
+                    href={`/api/auth/tradovate/connect?propFirmSlug=${selectedFirm.slug}`}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                    Continue to Tradovate →
+                  </a>
                 </div>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-3 mb-5">
+                    {fields.map((field) => (
+                      <div key={field.key}>
+                        <label className="block text-xs text-[var(--muted)] mb-1.5">{field.label}</label>
+                        <input
+                          type={field.type ?? "text"}
+                          value={credentials[field.key] ?? ""}
+                          onChange={(e) => setCredentials((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                          placeholder={field.type === "password" ? "••••••••" : ""}
+                          className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedFirm.infrastructure === "projectx" && (
+                    <div className="flex items-start gap-2 bg-blue-400/5 border border-blue-400/20 rounded-lg p-3 mb-3 text-xs text-blue-400/80">
+                      <span className="mt-px">ℹ️</span>
+                      <span>
+                        Get your API key from <strong>TopstepX → Settings → API</strong>. A ProjectX API subscription is required ($29/mo).
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-2 bg-yellow-400/5 border border-yellow-400/20 rounded-lg p-3 mb-5 text-xs text-yellow-400/80">
+                    <span className="mt-px">🔐</span>
+                    <span>
+                      Credentials are encrypted at rest with AES-256. We connect read-only — no trading on your behalf.
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleConnect}
+                    disabled={!allFilled}
+                    className="w-full bg-[var(--accent)] hover:bg-[var(--accent-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors text-sm"
+                  >
+                    Connect Account
+                  </button>
+                </>
               )}
-
-              <div className="flex items-start gap-2 bg-yellow-400/5 border border-yellow-400/20 rounded-lg p-3 mb-5 text-xs text-yellow-400/80">
-                <span className="mt-px">🔐</span>
-                <span>
-                  Credentials are encrypted at rest with AES-256. We connect read-only — no trading on your behalf.
-                </span>
-              </div>
-
-              <button
-                onClick={handleConnect}
-                disabled={!allFilled}
-                className="w-full bg-[var(--accent)] hover:bg-[var(--accent-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors text-sm"
-              >
-                Connect Account
-              </button>
             </div>
           )}
 
