@@ -87,6 +87,15 @@ export function Navbar() {
                   >
                     <span className="opacity-60">⬛</span> Dashboard
                   </Link>
+                  {(session.user as any).role === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-3 text-xs hover:bg-white/[0.06] transition-colors text-indigo-400 hover:text-indigo-300"
+                    >
+                      <span className="opacity-60">⚙</span> Admin Panel
+                    </Link>
+                  )}
                   {session.user.traderSlug && (
                     <Link
                       href={`/trader/${session.user.traderSlug}`}
