@@ -32,13 +32,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Auto sign-in after register
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
+    const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
 
     if (result?.error) {
@@ -51,70 +45,82 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4">
-      <div className="card w-full max-w-sm p-8">
-        <div className="mb-8 text-center">
-          <span className="text-3xl text-[var(--accent)]">⬡</span>
-          <h1 className="text-xl font-bold text-white mt-3">Create your account</h1>
+      <div className="w-full max-w-sm animate-fade-up">
+        {/* Logo + heading */}
+        <div className="text-center mb-8">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black text-white mx-auto mb-4"
+            style={{
+              background: "linear-gradient(135deg, #818cf8, #6366f1)",
+              boxShadow: "0 0 32px rgba(99,102,241,0.45)",
+            }}
+          >
+            P
+          </div>
+          <h1 className="text-2xl font-bold text-white">Create your account</h1>
           <p className="text-sm text-[var(--muted)] mt-1">Start tracking your prop firm journey</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1.5">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-              placeholder="you@example.com"
-            />
-          </div>
+        {/* Card */}
+        <div className="card p-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1.5 font-medium">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="glass-input"
+                placeholder="you@example.com"
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1.5">Username</label>
-            <input
-              type="text"
-              required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-              placeholder="traderpro42"
-            />
-          </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1.5 font-medium">Username</label>
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="glass-input"
+                placeholder="traderpro42"
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs text-[var(--muted)] mb-1.5">Password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[var(--background)] border border-[var(--card-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-              placeholder="••••••••"
-            />
-            <p className="text-[10px] text-[var(--muted)] mt-1">Minimum 8 characters</p>
-          </div>
+            <div>
+              <label className="block text-xs text-[var(--muted)] mb-1.5 font-medium">Password</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="glass-input"
+                placeholder="••••••••"
+              />
+              <p className="text-[10px] text-[var(--muted)] mt-1.5">Minimum 8 characters</p>
+            </div>
 
-          {error && (
-            <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
+            {error && (
+              <div className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--accent)] hover:bg-[var(--accent-dim)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-1"
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full mt-1"
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </button>
+          </form>
+        </div>
 
-        <p className="text-center text-xs text-[var(--muted)] mt-6">
+        <p className="text-center text-xs text-[var(--muted)] mt-5">
           Already have an account?{" "}
-          <Link href="/login" className="text-[var(--accent)] hover:underline">
+          <Link href="/login" className="text-[var(--accent)] hover:text-white transition-colors">
             Sign in
           </Link>
         </p>

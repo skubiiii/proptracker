@@ -164,14 +164,14 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 mt-1">
           <button
             onClick={() => setProfileOpen(true)}
-            className="flex items-center gap-1.5 text-xs bg-white/[0.06] hover:bg-white/10 text-white px-3 py-2 rounded-lg transition-colors"
+            className="btn-ghost text-xs !py-1.5 !px-3"
           >
             Edit Profile
           </button>
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center gap-2 text-xs bg-white/[0.06] hover:bg-white/10 disabled:opacity-50 text-white px-3 py-2 rounded-lg transition-colors"
+            className="btn-ghost text-xs !py-1.5 !px-3 disabled:opacity-50"
           >
             <span className={syncing ? "animate-spin inline-block" : ""}>↻</span>
             {syncing ? "Syncing..." : "Sync"}
@@ -189,7 +189,7 @@ export default function DashboardPage() {
           </p>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-dim)] text-white text-sm px-5 py-2.5 rounded-lg transition-colors"
+            className="btn-primary text-sm"
           >
             + Connect Account
           </button>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
           {!noAccounts && (
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-1.5 text-xs bg-[var(--accent)] hover:bg-[var(--accent-dim)] text-white px-3 py-1.5 rounded-md transition-colors"
+              className="btn-primary text-xs !py-1.5 !px-3"
             >
               <span>+</span> Connect Account
             </button>
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                       setProfileForm((prev) => ({ ...prev, [key]: e.target.value }))
                     }
                     placeholder={placeholder}
-                    className="w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20"
+                    className="glass-input"
                   />
                 </div>
               ))}
@@ -404,14 +404,14 @@ export default function DashboardPage() {
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setProfileOpen(false)}
-                className="flex-1 text-sm text-[var(--muted)] hover:text-white py-2 rounded-lg transition-colors"
+                className="btn-ghost flex-1 text-sm !py-2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleProfileSave}
                 disabled={profileSaving}
-                className="flex-1 text-sm bg-[var(--accent)] hover:bg-[var(--accent-dim)] disabled:opacity-50 text-white py-2 rounded-lg transition-colors"
+                className="btn-primary flex-1 text-sm !py-2"
               >
                 {profileSaving ? "Saving..." : "Save"}
               </button>
