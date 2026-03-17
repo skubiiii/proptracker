@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -73,16 +74,33 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
+  async function handleSync() {
+    setSyncing(true);
+    await fetch("/api/sync", { method: "POST" });
+    await fetchData();
+    setSyncing(false);
+  }
+
   const pnlColor = (stats?.totalPnl ?? 0) >= 0 ? "text-green-400" : "text-red-400";
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       {/* Header */}
-      <div className="mb-8">
-        <p className="text-xs text-[var(--muted)] uppercase tracking-widest mb-1">Dashboard</p>
-        <h1 className="text-2xl font-bold text-white">
-          Welcome back, {session?.user?.name}
-        </h1>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <p className="text-xs text-[var(--muted)] uppercase tracking-widest mb-1">Dashboard</p>
+          <h1 className="text-2xl font-bold text-white">
+            Welcome back, {session?.user?.name}
+          </h1>
+        </div>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="flex items-center gap-2 text-xs bg-white/[0.06] hover:bg-white/10 disabled:opacity-50 text-white px-3 py-2 rounded-lg transition-colors mt-1"
+        >
+          <span className={syncing ? "animate-spin" : ""}>↻</span>
+          {syncing ? "Syncing..." : "Sync Trades"}
+        </button>
       </div>
 
       {/* Cumulative P&L hero */}

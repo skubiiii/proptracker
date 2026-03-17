@@ -27,8 +27,8 @@ const CREDENTIAL_FIELDS: CredentialFields = {
     { label: "App ID (from Tradovate portal)", key: "appId" },
   ],
   projectx: [
-    { label: "Email", key: "email" },
-    { label: "Password", key: "password", type: "password" },
+    { label: "Username", key: "username" },
+    { label: "API Key", key: "apiKey", type: "password" },
   ],
 };
 
@@ -73,8 +73,6 @@ export function ConnectAccountModal({ open, onClose, onSuccess }: Props) {
     setStep("connecting");
     setErrorMsg("");
 
-    await new Promise((r) => setTimeout(r, 1200));
-
     const res = await fetch("/api/auth/connect-account", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -82,6 +80,7 @@ export function ConnectAccountModal({ open, onClose, onSuccess }: Props) {
         propFirmSlug: selectedFirm!.slug,
         platform: selectedFirm!.infrastructure,
         accountIdentifier: credentials.username || credentials.login || credentials.email || "account",
+        credentials,
       }),
     });
 
@@ -204,6 +203,15 @@ export function ConnectAccountModal({ open, onClose, onSuccess }: Props) {
                   </div>
                 ))}
               </div>
+
+              {selectedFirm.infrastructure === "projectx" && (
+                <div className="flex items-start gap-2 bg-blue-400/5 border border-blue-400/20 rounded-lg p-3 mb-3 text-xs text-blue-400/80">
+                  <span className="mt-px">ℹ️</span>
+                  <span>
+                    Get your API key from <strong>TopstepX → Settings → API</strong>. A ProjectX API subscription is required ($29/mo).
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-start gap-2 bg-yellow-400/5 border border-yellow-400/20 rounded-lg p-3 mb-5 text-xs text-yellow-400/80">
                 <span className="mt-px">🔐</span>
