@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  follows Follow[]
+  trader  Trader?
+
+  @@map("users")
+}
+
+model Trader {
+  id          String   @id @default(cuid())
+  userId      String?  @unique @map("user_id")
+  displayName String   @map("display_name")
+  slug        String   @unique
+  bio         String?
+  avatarUrl   String?  @map("avatar_url")
+  twitterUrl  String?  @map("twitter_url")
+  youtubeUrl  String?  @map("youtube_url")
+  tiktokUrl   String?  @map("tiktok_url")
+  telegramUrl String?  @map("telegram_url")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  connectedAccounts ConnectedAccount[]
+  closedTrades      ClosedTrade[]
+  follows           Follow[]
+  stats             TraderStats?
+  user              User?              @relation(fields: [userId], references: [id])
+
+  @@map("traders")
+}
+
+model PropFirm {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String  @unique
+  logoUrl        String? @map("logo_url")
+  infrastructure String
+  websiteUrl     String? @map("website_url")
+
+  connectedAccounts ConnectedAccount[]
+
+  @@map("prop_firms")
+}
+
+model ConnectedAccount {
+  id                   String    @id @default(cuid())
+  traderId             String    @map("trader_id")
+  propFirmId           String    @map("prop_firm_id")
+  platform             String
+  accountIdentifier    String    @map("account_identifier")
+  credentialsEncrypted String?   @map("credentials_encrypted")
+  status               String    @default("active")
+  connectedAt          DateTime  @default(now()) @map("connected_at")
+  lastSyncedAt         DateTime? @map("last_synced_at")
+
+  trader       Trader      @relation(fields: [traderId], references: [id])
+  propFirm     PropFirm    @relation(fields: [propFirmId], references: [id])
+  closedTrades ClosedTrade[]
+
+  @@map("connected_accounts")
+}
+
+model ClosedTrade {
+  id                 String   @id @default(cuid())
+  connectedAccountId String   @map("connected_account_id")
+  traderId           String   @map("trader_id")
+  instrument         String
+  direction          String
+  entryPrice         Float    @map("entry_price")
+  exitPrice          Float    @map("exit_price")
+  quantity           Float
+  pnl                Float
+  pnlPercent         Float    @map("pnl_percent")
+  entryTime          DateTime @map("entry_time")
+  exitTime           DateTime @map("exit_time")
+  closeReason        String   @map("close_reason")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  connectedAccount ConnectedAccount @relation(fields: [connectedAccountId], references: [id])
+  trader           Trader           @relation(fields: [traderId], references: [id])
+
+  @@map("closed_trades")
+}
+
+model Follow {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  traderId  String   @map("trader_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  trader Trader @relation(fields: [traderId], references: [id])
+
+  @@unique([userId, traderId])
+  @@map("follows")
+}
+
+model TraderStats {
+  id                      String   @id @default(cuid())
+  traderId                String   @unique @map("trader_id")
+  totalTrades             Int      @default(0) @map("total_trades")
+  totalPnl                Float    @default(0) @map("total_pnl")
+  winRate                 Float    @default(0) @map("win_rate")
+  avgRr                   Float    @default(0) @map("avg_rr")
+  bestTrade               Float    @default(0) @map("best_trade")
+  worstTrade              Float    @default(0) @map("worst_trade")
+  maxDrawdown             Float    @default(0) @map("max_drawdown")
+  avgTradeDurationMinutes Float    @default(0) @map("avg_trade_duration_minutes")
+  consistencyScore        Float    @default(0) @map("consistency_score")
+  followerCount           Int      @default(0) @map("follower_count")
+  lastCalculatedAt        DateTime @default(now()) @map("last_calculated_at")
+
+  trader Trader @relation(fields: [traderId], references: [id])
+
+  @@map("trader_stats")
+}
