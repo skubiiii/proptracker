@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.traderId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,14 +19,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // Ensure account belongs to this trader
   const account = await prisma.connectedAccount.findFirst({
-    where: { id: params.id, traderId: session.user.traderId },
+    where: { id, traderId: session.user.traderId },
   });
   if (!account) {
     return NextResponse.json({ error: "Account not found" }, { status: 404 });
   }
 
   const updated = await prisma.connectedAccount.update({
-    where: { id: params.id },
+    where: { id },
     data: { accountType },
   });
 
