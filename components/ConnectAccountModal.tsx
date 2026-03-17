@@ -3,49 +3,32 @@
 import { useState, useEffect, useRef } from "react";
 
 const PROP_FIRMS = [
-  { slug: "apex", name: "Apex Trader Funding", infrastructure: "rithmic", desc: "Rithmic API — username & password" },
-  { slug: "topstep", name: "Topstep", infrastructure: "rithmic", desc: "Rithmic API — username & password" },
-  { slug: "mff", name: "MyFundedFutures", infrastructure: "rithmic", desc: "Rithmic API — username & password" },
-  { slug: "ftmo", name: "FTMO", infrastructure: "mt4", desc: "MT4 — server, login & password" },
-  { slug: "the5ers", name: "The5ers", infrastructure: "mt5", desc: "MT5 — server, login & password" },
+  { slug: "apex", name: "Apex Trader Funding", infrastructure: "tradovate", desc: "Tradovate — email & password" },
+  { slug: "topstep", name: "Topstep", infrastructure: "projectx", desc: "ProjectX — email & password" },
+  { slug: "mff", name: "MyFundedFutures", infrastructure: "tradovate", desc: "Tradovate — email & password" },
 ];
 
 const INFRA_BADGE: Record<string, string> = {
-  rithmic: "bg-orange-400/10 text-orange-400",
-  mt4: "bg-green-400/10 text-green-400",
-  mt5: "bg-teal-400/10 text-teal-400",
   tradovate: "bg-blue-400/10 text-blue-400",
+  projectx: "bg-purple-400/10 text-purple-400",
 };
 
 type Step = "firm" | "credentials" | "connecting" | "success" | "error";
 
 interface CredentialFields {
-  rithmic: { label: string; key: string; type?: string }[];
-  mt4: { label: string; key: string; type?: string }[];
-  mt5: { label: string; key: string; type?: string }[];
   tradovate: { label: string; key: string; type?: string }[];
+  projectx: { label: string; key: string; type?: string }[];
 }
 
 const CREDENTIAL_FIELDS: CredentialFields = {
-  rithmic: [
-    { label: "Username", key: "username" },
-    { label: "Password", key: "password", type: "password" },
-    { label: "FCM ID (e.g. Rithmic01)", key: "fcmId" },
-  ],
-  mt4: [
-    { label: "Server (e.g. FTMO-Server3)", key: "server" },
-    { label: "Login (account number)", key: "login" },
-    { label: "Password", key: "password", type: "password" },
-  ],
-  mt5: [
-    { label: "Server", key: "server" },
-    { label: "Login (account number)", key: "login" },
-    { label: "Password", key: "password", type: "password" },
-  ],
   tradovate: [
     { label: "Email", key: "email" },
     { label: "Password", key: "password", type: "password" },
     { label: "App ID (from Tradovate portal)", key: "appId" },
+  ],
+  projectx: [
+    { label: "Email", key: "email" },
+    { label: "Password", key: "password", type: "password" },
   ],
 };
 
@@ -188,7 +171,7 @@ export function ConnectAccountModal({ open, onClose, onSuccess }: Props) {
                 </button>
               ))}
               <p className="text-[10px] text-[var(--muted)] text-center mt-2">
-                More firms coming soon: Tradovate (OAuth2), ProjectX, E8 Markets
+                More firms coming soon: FTMO, The5ers, E8 Markets
               </p>
             </div>
           )}
